@@ -41,9 +41,23 @@ const App: React.FC = () => {
 
   const fetchPoem = async () => {
     setIsLoading(true);
-    const result = await generateRomanticPoem(userName, partnerName, mood);
-    setPoem(result);
-    setIsLoading(false);
+    // Safety timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (isLoading) {
+        console.warn("Poem generation timed out. Checking state...");
+        setIsLoading(false);
+      }
+    }, 15000);
+
+    try {
+      const result = await generateRomanticPoem(userName, partnerName, mood);
+      setPoem(result);
+    } catch (err) {
+      console.error("Failed to fetch poem:", err);
+    } finally {
+      clearTimeout(timeout);
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -144,7 +158,7 @@ const App: React.FC = () => {
                 <div className="h-0.5 w-full bg-rose-900/5 mb-10"></div>
 
                 <div className="text-gray-800 text-2xl font-dancing leading-relaxed mb-12 italic text-left space-y-4">
-                  {poem?.poem.split('\n').map((line, idx) => (
+                  {(poem?.poem || "My heart is full of words for you...").split('\n').map((line, idx) => (
                     <p key={idx} className="animate-fadeIn" style={{ animationDelay: `${idx * 0.5}s` }}>
                       {line}
                     </p>

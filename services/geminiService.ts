@@ -7,7 +7,14 @@ export const generateRomanticPoem = async (
   partnerName: string, 
   mood: MessageMood = 'Sincere'
 ): Promise<PoemResponse | null> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  const apiKey = process.env.API_KEY;
+  
+  if (!apiKey) {
+    console.warn("API_KEY is missing. Using fallback poem.");
+    return getFallbackPoem(partnerName, userName);
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   
   const moodPrompts = {
     'Sincere': "Write a romantic and sincere message for Rose Day. It should express deep admiration and affection, focusing on heartfelt connection and gratitude. It should feel personal and culminate in a sweet proposal to be a Valentine.",
@@ -37,10 +44,17 @@ export const generateRomanticPoem = async (
     });
 
     const text = response.text;
-    if (!text) return null;
+    if (!text) return getFallbackPoem(partnerName, userName);
     return JSON.parse(text) as PoemResponse;
   } catch (error) {
     console.error("Error generating poem:", error);
-    return null;
+    return getFallbackPoem(partnerName, userName);
   }
 };
+
+function getFallbackPoem(partnerName: string, userName: string): PoemResponse {
+  return {
+    title: "A Rose for My Everything",
+    poem: `My Dearest ${partnerName},\n\nEvery rose in this world reminds me of your grace and beauty. You have filled my life with a color I never knew existed. \n\nWalking through this garden of reasons, I realize that words could never truly capture how much you mean to me. You are my heart, my soul, and my constant inspiration.\n\nOn this Rose Day, I give you my heart once again.`
+  };
+}
